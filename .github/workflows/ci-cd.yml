@@ -9,7 +9,7 @@ on:
 jobs:
   # Stage 1: Build and Test
   build-and-test:
-    runs-on: ubuntu-latest  # GitHub-hosted runner
+    runs-on: ubuntu-latest
     
     steps:
       # Checkout repository code
@@ -52,7 +52,7 @@ jobs:
 
   # Stage 2: Deploy (Simulated)
   deploy:
-    runs-on: ubuntu-latest  # GitHub-hosted runner
+    runs-on: ubuntu-latest
     needs: build-and-test
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
@@ -92,10 +92,20 @@ jobs:
     steps:
       - name: Pipeline status notification
         run: |
-          if [ "${{ needs.deploy.result }}" == "success" ]; then
+          BUILD_STATUS="${{ needs.build-and-test.result }}"
+          DEPLOY_STATUS="${{ needs.deploy.result }}"
+          
+          echo "Build Status: $BUILD_STATUS"
+          echo "Deploy Status: $DEPLOY_STATUS"
+          
+          if [ "$BUILD_STATUS" == "success" ] && ([ "$DEPLOY_STATUS" == "success" ] || [ "$DEPLOY_STATUS" == "skipped" ]); then
             echo "🎉 CI/CD Pipeline completed successfully!"
-            echo "📦 Application build: ${{ github.sha }}"
-            echo "🚀 Deployment timestamp: $(date)"
+            if [ "$DEPLOY_STATUS" == "success" ]; then
+              echo "📦 Application deployed successfully"
+              echo "🚀 Deployment timestamp: $(date)"
+            else
+              echo "⏭️  Deployment skipped (PR branch - will deploy on merge to main)"
+            fi
             echo "✅ All stages passed: Build → Test → Deploy"
           else
             echo "❌ Pipeline failed. Please check the logs above."
