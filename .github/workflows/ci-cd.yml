@@ -9,7 +9,7 @@ on:
 jobs:
   # Stage 1: Build and Test
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # GitHub-hosted runner
     
     steps:
       # Checkout repository code
@@ -31,81 +31,72 @@ jobs:
       - name: Run tests
         run: npm test
       
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build -t contact-manager:${{ github.sha }} .
+      
+      # Save Docker image as artifact
+      - name: Save Docker image
+        run: |
+          docker save contact-manager:${{ github.sha }} | gzip > contact-manager.tar.gz
+      
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: contact-manager.tar.gz
+          retention-days: 1
+      
       - name: Build success notification
         run: echo "✅ Build and test stage completed successfully!"
 
-  # Stage 2: Build and Push Docker Image
-  build-docker:
-    runs-on: ubuntu-latest
+  # Stage 2: Deploy (Simulated)
+  deploy:
+    runs-on: ubuntu-latest  # GitHub-hosted runner
     needs: build-and-test
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
-      # Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      # Login to Docker Hub
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      # Download the built Docker image
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          name: docker-image
       
-      # Build and push Docker image
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager:${{ github.sha }}
-      
-      - name: Docker build success
-        run: echo "✅ Docker image pushed to Docker Hub!"
-
-  # Stage 3: Deploy to Render
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-docker
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    
-    steps:
-      - name: Deploy to Render
+      # Load Docker image
+      - name: Load Docker image
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
-          echo "✅ Deployment triggered on Render!"
+          docker load < contact-manager.tar.gz
+          docker tag contact-manager:${{ github.sha }} contact-manager:latest
       
-      - name: Deployment success
-        run: echo "✅ Application deployed to Render successfully!"
+      # Deploy container (simulated for demonstration)
+      - name: Deploy container
+        run: |
+          docker run -d -p 3000:3000 --name contact-app contact-manager:latest
+          echo "✅ Container deployed successfully!"
+      
+      # Verify deployment
+      - name: Verify deployment
+        run: |
+          sleep 5
+          curl -f http://localhost:3000/ || (echo "Deployment verification failed" && exit 1)
+          echo "✅ Application is responding correctly!"
+          echo "📦 Deployed image: contact-manager:${{ github.sha }}"
 
-  # Stage 4: Notification
+  # Stage 3: Notification
   notify:
     runs-on: ubuntu-latest
-    needs: [build-and-test, build-docker, deploy]
+    needs: [build-and-test, deploy]
     if: always()
     
     steps:
       - name: Pipeline status notification
         run: |
-          BUILD_STATUS="${{ needs.build-and-test.result }}"
-          DOCKER_STATUS="${{ needs.build-docker.result }}"
-          DEPLOY_STATUS="${{ needs.deploy.result }}"
-          
-          echo "Build Status: $BUILD_STATUS"
-          echo "Docker Status: $DOCKER_STATUS"
-          echo "Deploy Status: $DEPLOY_STATUS"
-          
-          if [ "$BUILD_STATUS" == "success" ] && ([ "$DOCKER_STATUS" == "success" ] || [ "$DOCKER_STATUS" == "skipped" ]) && ([ "$DEPLOY_STATUS" == "success" ] || [ "$DEPLOY_STATUS" == "skipped" ]); then
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
             echo "🎉 CI/CD Pipeline completed successfully!"
-            if [ "$DEPLOY_STATUS" == "success" ]; then
-              echo "📦 Application deployed to Render"
-              echo "🚀 Live at your Render URL"
-            else
-              echo "⏭️  Deployment skipped (PR branch)"
-            fi
-            echo "✅ All stages passed: Build → Test → Docker → Deploy"
+            echo "📦 Application build: ${{ github.sha }}"
+            echo "🚀 Deployment timestamp: $(date)"
+            echo "✅ All stages passed: Build → Test → Deploy"
           else
             echo "❌ Pipeline failed. Please check the logs above."
             exit 1
