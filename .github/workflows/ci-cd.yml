@@ -38,7 +38,6 @@ jobs:
   build-docker:
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
       # Checkout code
@@ -69,7 +68,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-docker
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
       - name: Trigger Render Deployment
@@ -94,15 +92,11 @@ jobs:
           echo "Docker Status: $DOCKER_STATUS"
           echo "Deploy Status: $DEPLOY_STATUS"
           
-          if [ "$BUILD_STATUS" == "success" ] && ([ "$DOCKER_STATUS" == "success" ] || [ "$DOCKER_STATUS" == "skipped" ]) && ([ "$DEPLOY_STATUS" == "success" ] || [ "$DEPLOY_STATUS" == "skipped" ]); then
+          if [ "$BUILD_STATUS" == "success" ] && [ "$DOCKER_STATUS" == "success" ] && [ "$DEPLOY_STATUS" == "success" ]; then
             echo "🎉 CI/CD Pipeline completed successfully!"
-            if [ "$DEPLOY_STATUS" == "success" ]; then
-              echo "📦 Application deployed to Render"
-              echo "🌐 Check your Render dashboard for live URL"
-              echo "🚀 Deployment timestamp: $(date)"
-            else
-              echo "⏭️  Deployment skipped (PR branch - will deploy on merge to main)"
-            fi
+            echo "📦 Application deployed to Render"
+            echo "🌐 Check your Render dashboard for live URL"
+            echo "🚀 Deployment timestamp: $(date)"
             echo "✅ All stages passed: Build → Test → Docker Push → Deploy"
           else
             echo "❌ Pipeline failed. Please check the logs above."
