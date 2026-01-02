@@ -1,11 +1,23 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
+// Add morgan middleware for logging
+app.use(morgan('dev'));
 app.use(express.json());
 
 // In-memory data store
 let contacts = [];
 let idCounter = 1;
+
+// ROOT endpoint - Welcome message
+// ROOT endpoint - Welcome message
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    message: "Backend Deployed Successfully"
+  });
+});
+
 
 // CREATE contact
 app.post("/contacts", (req, res) => {
