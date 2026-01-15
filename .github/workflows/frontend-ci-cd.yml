@@ -1,0 +1,162 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'contact_manager/**'
+      - '.github/workflows/frontend-ci-cd.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'contact_manager/**'
+
+jobs:
+  # Stage 1: Lint and Build
+  lint-and-build:
+    runs-on: ubuntu-latest
+    
+    # Set working directory to frontend folder
+    defaults:
+      run:
+        working-directory: ./contact_manager
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './contact_manager/package-lock.json'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+      
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:8000' }}
+      
+      - name: Verify standalone build
+        run: |
+          if [ -d ".next/standalone" ]; then
+            echo "✅ Standalone build successful"
+            echo "📦 Build size:"
+            du -sh .next/standalone
+          else
+            echo "❌ Standalone build failed - .next/standalone not found"
+            exit 1
+          fi
+      
+      - name: Build artifacts summary
+        run: |
+          echo "🎯 Build completed successfully!"
+          echo "📁 Build output:"
+          ls -lah .next/ | head -10
+
+  # Stage 2: Build and Push Docker Image
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./contact_manager
+          file: ./contact_manager/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:8000' }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend:${{ github.sha }}
+      
+      - name: Docker image info
+        run: |
+          echo "✅ Docker image built and pushed successfully!"
+          echo "📦 Image: ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend:latest"
+          echo "🏷️  Commit Tag: ${{ github.sha }}"
+          echo "🐳 View on Docker Hub: https://hub.docker.com/r/${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend"
+
+  # Stage 3: Deploy to Render (DISABLED FOR NOW)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-docker
+    if: false  # Disabled - enable after Render setup
+    
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          echo "⏭️  Render deployment skipped - not configured yet"
+          echo "Will be enabled after Render setup"
+
+  # Stage 4: Notification
+  notify:
+    runs-on: ubuntu-latest
+    needs: [lint-and-build, build-docker]
+    if: always()
+    
+    steps:
+      - name: Pipeline summary
+        run: |
+          BUILD="${{ needs.lint-and-build.result }}"
+          DOCKER="${{ needs.build-docker.result }}"
+          
+          echo "================================================"
+          echo "🔍 Frontend CI/CD Pipeline Summary"
+          echo "================================================"
+          echo "Stage 1 (Lint & Build): $BUILD"
+          echo "Stage 2 (Docker Build):  $DOCKER"
+          echo "Stage 3 (Deploy):        SKIPPED (not configured)"
+          echo "================================================"
+          
+          if [ "$BUILD" == "success" ] && \
+             ([ "$DOCKER" == "success" ] || [ "$DOCKER" == "skipped" ]); then
+            
+            echo ""
+            echo "✅ Frontend CI/CD Test Successful!"
+            echo ""
+            echo "📋 What was tested:"
+            echo "   ✓ ESLint validation"
+            echo "   ✓ Next.js build with standalone output"
+            echo "   ✓ Docker multi-stage build"
+            
+            if [ "$DOCKER" == "success" ]; then
+              echo "   ✓ Docker image pushed to Docker Hub"
+              echo ""
+              echo "🐳 Docker image ready for deployment"
+              echo "📦 Next step: Set up Render and add deploy hook"
+            else
+              echo ""
+              echo "⏭️  Docker build skipped (PR branch)"
+            fi
+            
+            echo ""
+            echo "================================================"
+          else
+            echo ""
+            echo "❌ Pipeline Failed"
+            echo ""
+            [ "$BUILD" != "success" ] && echo "   ✗ Lint or build stage failed"
+            [ "$DOCKER" == "failure" ] && echo "   ✗ Docker build failed"
+            echo ""
+            exit 1
+          fi
