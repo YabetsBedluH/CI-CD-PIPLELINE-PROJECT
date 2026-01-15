@@ -29,7 +29,7 @@ export default function Home() {
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/contacts`);
+      const response = await fetch(`${API_URL}contacts`);
       const data = await response.json();
       setContacts(data);
       setError("");
@@ -44,7 +44,7 @@ export default function Home() {
   const createContact = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/contacts`, {
+      const response = await fetch(`${API_URL}contacts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -70,7 +70,7 @@ export default function Home() {
     if (!editingContact) return;
 
     try {
-      const response = await fetch(`${API_URL}/contacts/${editingContact.id}`, {
+      const response = await fetch(`${API_URL}contacts/${editingContact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -92,7 +92,7 @@ export default function Home() {
     if (!confirm("Are you sure you want to delete this contact?")) return;
 
     try {
-      const response = await fetch(`${API_URL}/contacts/${id}`, {
+      const response = await fetch(`${API_URL}contacts/${id}`, {
         method: "DELETE"
       });
 
