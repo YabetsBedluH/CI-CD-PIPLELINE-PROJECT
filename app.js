@@ -91,7 +91,7 @@ app.delete("/contacts/:id", (req, res) => {
 // Export for testing
 module.exports = app;
 
-// Start server
+// Start-server
 if (require.main === module) {
   const PORT = 8000;
   app.listen(PORT, () => {
