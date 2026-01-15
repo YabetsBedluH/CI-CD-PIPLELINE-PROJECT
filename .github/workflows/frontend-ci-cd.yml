@@ -42,7 +42,7 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://contact-manager-up3z.onrender.com/' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://contact-manager-up3z.onrender.com' }}
       
       - name: Verify standalone build
         run: |
@@ -84,7 +84,7 @@ jobs:
           file: ./contact_manager/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://contact-manager-up3z.onrender.com/' }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://contact-manager-up3z.onrender.com' }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager-frontend:${{ github.sha }}
