@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Contact {
   id: number;
@@ -25,20 +25,20 @@ export default function Home() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // Fetch all contacts
-  const fetchContacts = async () => {
+  // Fetch all contacts - wrapped in useCallback to fix dependency warning
+  const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/contacts`);
       const data = await response.json();
       setContacts(data);
       setError("");
-    } catch (err) {
+    } catch {
       setError("Failed to fetch contacts");
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
 
   // Create contact
   const createContact = async (e: React.FormEvent) => {
@@ -59,8 +59,8 @@ export default function Home() {
       setContacts([...contacts, newContact]);
       resetForm();
       setError("");
-    } catch (err: any) {
-      setError(err.message || "Failed to create contact");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to create contact");
     }
   };
 
@@ -82,8 +82,8 @@ export default function Home() {
       setContacts(contacts.map(c => c.id === updatedContact.id ? updatedContact : c));
       resetForm();
       setError("");
-    } catch (err: any) {
-      setError(err.message || "Failed to update contact");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to update contact");
     }
   };
 
@@ -100,8 +100,8 @@ export default function Home() {
 
       setContacts(contacts.filter(c => c.id !== id));
       setError("");
-    } catch (err: any) {
-      setError(err.message || "Failed to delete contact");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to delete contact");
     }
   };
 
@@ -125,7 +125,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchContacts();
-  }, []);
+  }, [fetchContacts]);
 
   return (
     <div className="space-y-8">
@@ -294,7 +294,7 @@ export default function Home() {
           <div className="text-center py-20">
             <span className="text-7xl">📭</span>
             <p className="mt-4 text-xl text-gray-500 font-medium">No contacts yet</p>
-            <p className="text-gray-400 mt-2">Click "Add Contact" to get started</p>
+            <p className="text-gray-400 mt-2">Click &quot;Add Contact&quot; to get started</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
