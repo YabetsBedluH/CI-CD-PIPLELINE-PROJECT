@@ -1,6 +1,13 @@
+require('dotenv').config();
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 const app = express();
+
+// Add CORS middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL
+}));
 
 // Add morgan middleware for logging
 app.use(morgan('dev'));
@@ -11,13 +18,11 @@ let contacts = [];
 let idCounter = 1;
 
 // ROOT endpoint - Welcome message
-// ROOT endpoint - Welcome message
 app.get("/", (req, res) => {
   res.status(200).json({ 
     message: "Backend Deployed Successfully"
   });
 });
-
 
 // CREATE contact
 app.post("/contacts", (req, res) => {
@@ -88,7 +93,7 @@ module.exports = app;
 
 // Start server
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
+  const PORT = 8000;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
