@@ -190,7 +190,7 @@ export default function Home() {
         <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">API Endpoints</h3>
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">API Endpoint</h3>
               <p className="text-sm font-mono text-gray-900 mt-2 break-all">https://contact-manager-up3z.onrender.com</p>
             </div>
             <div className="bg-purple-100 p-4 rounded-full">
