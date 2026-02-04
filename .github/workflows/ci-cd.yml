@@ -32,7 +32,7 @@ jobs:
         run: npm test
       
       - name: Build success notification
-        run: echo "✅ Build and test stage completed successfully!"
+        run: echo "Build and test stage completed successfully!"
 
   # Stage 2: Build and Push Docker Image
   build-docker:
@@ -63,7 +63,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/contact-manager:${{ github.sha }}
       
       - name: Docker build success
-        run: echo "✅ Docker image pushed to Docker Hub!"
+        run: echo "Docker image pushed to Docker Hub!"
 
   # Stage 3: Deploy to Render
   deploy:
@@ -75,7 +75,7 @@ jobs:
       - name: Trigger Render Deployment
         run: |
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-          echo "✅ Render deployment triggered!"
+          echo "Render deployment triggered!"
 
   # Stage 4: Notification
   notify:
@@ -95,16 +95,16 @@ jobs:
           echo "Deploy Status: $DEPLOY_STATUS"
           
           if [ "$BUILD_STATUS" == "success" ] && ([ "$DOCKER_STATUS" == "success" ] || [ "$DOCKER_STATUS" == "skipped" ]) && ([ "$DEPLOY_STATUS" == "success" ] || [ "$DEPLOY_STATUS" == "skipped" ]); then
-            echo "🎉 CI/CD Pipeline completed successfully!"
+            echo "CI/CD Pipeline completed successfully!"
             if [ "$DEPLOY_STATUS" == "success" ]; then
-              echo "📦 Application deployed to Render"
-              echo "🌐 Check your Render dashboard for live URL"
-              echo "🚀 Deployment timestamp: $(date)"
+              echo "Application deployed to Render"
+              echo " Check your Render dashboard for live URL"
+              echo "Deployment timestamp: $(date)"
             else
-              echo "⏭️  Deployment skipped (PR branch - will deploy on merge to main)"
+              echo " Deployment skipped (PR branch - will deploy on merge to main)"
             fi
-            echo "✅ All stages passed: Build → Test → Docker Push → Deploy"
+            echo "All stages passed: Build → Test → Docker Push → Deploy"
           else
-            echo "❌ Pipeline failed. Please check the logs above."
+            echo "Pipeline failed. Please check the logs above."
             exit 1
           fi
