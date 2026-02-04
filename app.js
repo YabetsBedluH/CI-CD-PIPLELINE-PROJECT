@@ -29,7 +29,7 @@ app.post("/contacts", (req, res) => {
   const { name, email, phone } = req.body;
 
   if (!name || !email || !phone) {
-    return res.status(400).json({ message: "All field are required" });
+    return res.status(400).json({ message: "All fields are required" });
   }
 
   const contact = {
