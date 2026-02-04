@@ -20,7 +20,7 @@ let idCounter = 1;
 // ROOT endpoint - Welcome message
 app.get("/", (req, res) => {
   res.status(200).json({ 
-    message: "Backend Deployed Successfully"
+    message: "Backend has been Deployed Successfully"
   });
 });
 
