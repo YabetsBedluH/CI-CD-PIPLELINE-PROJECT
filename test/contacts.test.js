@@ -41,7 +41,7 @@ describe("Contact Management API", () => {
       });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toBe("All fields are required");
+    expect(res.body.message).toBe("All field are required");
   });
 
 });
