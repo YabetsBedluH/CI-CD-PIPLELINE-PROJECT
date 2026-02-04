@@ -60,7 +60,7 @@ export default function Home() {
       resetForm();
       setError("");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to create contact");
+      setError(error instanceof Error ? error.message : "Failed to create contact ");
     }
   };
 
@@ -76,14 +76,14 @@ export default function Home() {
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) throw new Error("Failed to update contact");
+      if (!response.ok) throw new Error("Failed to update Contact");
 
       const updatedContact = await response.json();
       setContacts(contacts.map(c => c.id === updatedContact.id ? updatedContact : c));
       resetForm();
       setError("");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to update contact");
+      setError(error instanceof Error ? error.message : "Failed to update Contact");
     }
   };
 
