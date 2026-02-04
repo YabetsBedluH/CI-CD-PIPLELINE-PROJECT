@@ -134,7 +134,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold mb-2">
-              📇 Contact Manager
+              📇 Contact Manager App
             </h2>
             <p className="text-blue-100 text-lg">
               Organize and manage your contacts easily
