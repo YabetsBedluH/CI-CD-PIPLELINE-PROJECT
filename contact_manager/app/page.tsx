@@ -137,7 +137,7 @@ export default function Home() {
               📇 Contact Manager
             </h2>
             <p className="text-blue-100 text-lg">
-              Organize and manage your contacts with ease
+              Organize and manage your contacts easily
             </p>
           </div>
           {!showForm && (
