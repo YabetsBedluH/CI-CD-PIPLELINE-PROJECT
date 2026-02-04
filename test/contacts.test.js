@@ -7,7 +7,7 @@ describe("Contact Management API", () => {
   it("should return welcome message at root", async () => {
     const res = await request(app).get("/");
     expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBe("Backend Deployed Successfully");
+    expect(res.body.message).toBe("Backend has been Deployed Successfully");
   });
 
   // Test: Create contact
